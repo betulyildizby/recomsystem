@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Experience Finder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎉 Festival Experience Finder</h1>
+            <p>Discover personalized festival experiences tailored to your interests</p>
+        </div>
+
+        <!-- Step 1: Welcome -->
+        <div id="welcome-step" class="step active">
+            <div class="welcome-box">
+                <div class="ai-greeting">
+                    <div class="robot-icon">🤖</div>
+                    <h2>Welcome to the Festival!</h2>
+                    <p class="greeting-text">I'm your AI Festival Assistant</p>
+                    <p class="greeting-message">What kinds of experiences are you most interested in at the festival?</p>
+                </div>
+                <p>Answer a few quick questions to get personalized recommendations.</p>
+                <button onclick="startQuestions()" class="btn btn-primary">Let's Start →</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Questions -->
+        <div id="questions-step" class="step">
+            <div class="questions-container">
+                <h2>📋 Quick Questions</h2>
+                <p class="step-info">Step <span id="current-question">1</span> of 4</p>
+                
+                <div id="questions-content"></div>
+                
+                <div class="buttons">
+                    <button onclick="previousQuestion()" class="btn btn-secondary" id="prev-btn" style="display:none;">← Back</button>
+                    <button onclick="nextQuestion()" class="btn btn-primary" id="next-btn">Next →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Summary -->
+        <div id="summary-step" class="step">
+            <div class="summary-container">
+                <h2>📊 Summary</h2>
+                <p>Here's what you selected:</p>
+                <div id="summary-content"></div>
+                <button onclick="showResults()" class="btn btn-primary">See My Recommendations →</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Results -->
+        <div id="results-step" class="step">
+            <div class="results-container">
+                <h2>🎯 Your Personalized Recommendations</h2>
+                <div id="results-content"></div>
+                <button onclick="restart()" class="btn btn-primary">Start Over</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
