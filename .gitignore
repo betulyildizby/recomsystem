@@ -1,5 +1,4 @@
-# Data and document files
-*.csv
+# Large or non-code assets
 *.xlsx
 *.xls
 *.pdf
@@ -8,6 +7,12 @@
 *.zip
 *.rar
 *.ipynb
+
+# Keep mock CSV data in the repo
+!content_rows_mock.csv
+!notifications_rows_mock.csv
+!users_rows_mock.csv
+!wishlist_rows_mock.csv
 
 # Python cache
 __pycache__/
