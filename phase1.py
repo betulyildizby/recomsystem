@@ -80,7 +80,7 @@ def ensure_wishlist_titles(df_wish, df_content):
     return df_wish
 
 
-# --- V1 ANALYSIS FUNCTIONS ---
+# --- V1 Analysis ---
 def prepare_noshows(df_notif):
     df_noshows = df_notif[df_notif['type'].astype(str).str.contains('no_show', na=False)].copy()
     parsed = df_noshows.apply(parse_notification_json, axis=1)
@@ -135,7 +135,7 @@ def build_user_risk_report(df_noshows, df_users):
     return user_risk_report.sort_values(by=['notif_noshow_count', 'strike_count'], ascending=False)
 
 
-# --- V2 ANALYSIS FUNCTIONS ---
+# --- V2 Analysis ---
 def categorize_group(role):
     if pd.isna(role):
         return 'UNKNOWN'
@@ -163,7 +163,7 @@ def get_daily_metrics(df_subset):
     )
 
 
-# --- V3 ANALYSIS FUNCTIONS ---
+# --- V3 Analysis ---
 def build_behavioral_user_analysis(df_notif, df_users, df_wish, df_content):
     df_wish = ensure_wishlist_titles(df_wish, df_content)
     wishlist_by_user = (
@@ -264,7 +264,7 @@ def calculate_risk_score(df_notif, df_users):
     return df_risk
 
 
-# --- DATA LOADING AND INITIALIZATION ---
+# --- Data Loading & Initialization ---
 def get_event_title(json_str):
     try:
         return json.loads(json_str).get('content_title')
@@ -415,12 +415,9 @@ def generate_user_keyword_ratings():
     return {keyword: random.randint(1, 5) for keyword in global_keywords}
 
 
-# --- ADVANCED HYBRID SCORING ENGINE (V1 + V2 + V3 + Onboarding Ratings) ---
+# --- HYBRID SCORING ENGINE (V1 + V2 + V3 + Onboarding) ---
 def calculate_advanced_hybrid_score(user_id, content_row, user_ratings, user_profile=None):
-    """
-    Combines V1 (Risk/No-show penalties), V2 (Security Matrix + Jury must-book),
-    V3 (Wishlist boost & Toxic No-Show penalty), and Onboarding (1-5 Star Ratings).
-    """
+    """Calculate hybrid recommendation score based on user role, preferences, wishlist, and risk signals."""
     user_id = str(user_id).strip()
     user_row_matches = df_users[df_users['id'].astype(str).str.strip() == user_id]
     if user_row_matches.empty:
@@ -443,29 +440,29 @@ def calculate_advanced_hybrid_score(user_id, content_row, user_ratings, user_pro
     except Exception:
         user_preferred_tags = []
     
-    # --- RULE A: User Role Grading & Security Matrix (V2) ---
+    # Rule A: Security Matrix - Block GRAND_PUBLIC from B2B events
     if user_role == "GRAND_PUBLIC" and "B2B_NETWORKING" in content_tags:
-        return 0.0  # Security block: Hard drop to 0
+        return 0.0
         
     score = 0.0
     
-    # --- RULE B: Must-See / Must-Book Logic for PRO & Jury (V2) ---
+    # Rule B: Priority Boost - +150 for unbooked B2B/Talks for PRO and Decision Makers
     if user_role in ["PRO", "DECISION_MAKER"] and ("B2B_NETWORKING" in content_tags or "CREATOR_TALK" in content_tags):
         user_history = user_booking_history.get(user_id, [])
         if content_title not in user_history:
-            score += 150.0 
-
-    # --- RULE C: Conditional Behavior Sequence Validation ---
+            score += 150.0
+ 
+    # Rule C: Chained Event Boost - +40 for VR preference leading to Creator Talk
     user_history = user_booking_history.get(user_id, [])
     if "VR_EXPERIENCE" in user_preferred_tags and "CREATOR_TALK" in content_tags and len(user_history) > 0:
         score += 40.0
         
-    # --- RULE D: General Alignment (Base Match) ---
+    # Rule D: Tag Alignment - +25 per matching tag with user preferences
     for tag in content_tags:
         if tag in user_preferred_tags:
             score += 25.0
 
-    # --- RULE E: Wishlist Alignment Boost (V3) ---
+    # Rule E: Wishlist Boost - +35 for title match, +15 per wishlist tag match
     if user_profile:
         u_wish_ids = user_profile.get('wishlist_ids', [])
         u_wish_titles = user_profile.get('wishlist_titles', [])
@@ -478,7 +475,7 @@ def calculate_advanced_hybrid_score(user_id, content_row, user_ratings, user_pro
             if tag in top_wish_tags:
                 score += 15.0
 
-    # --- RULE F: Risk Score & No-Show Penalties (V1 & V3) ---
+    # Rule F: Risk Score & No-Show Penalties
     if user_profile:
         risk_score = user_profile.get('risk_score', 0)
         if risk_score > 0:
@@ -493,7 +490,7 @@ def calculate_advanced_hybrid_score(user_id, content_row, user_ratings, user_pro
             if tag in top_noshow_tags:
                 score -= 15.0
 
-    # --- RULE G: Onboarding Keyword 1-5 Star Ratings (Phase 2) ---
+    # Rule G: Onboarding Rating Multiplier (1-5 stars x 15 pts)
     for tag in content_tags:
         if tag in user_ratings and user_ratings[tag] > 0:
             score += user_ratings[tag] * 15.0
@@ -524,7 +521,7 @@ category_descriptions = {
 try:
     df_users, df_content, df_notif, df_wish = init_data()
 except FileNotFoundError as e:
-    print(f"Hata: {e}. Lütfen CSV dosyalarının mevcut olduğunu doğrulayın.")
+    print(f"Error: {e}. Please verify that the CSV files are present.")
     sys.exit(1)
 
 user_booking_history = build_user_booking_history(df_notif)

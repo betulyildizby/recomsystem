@@ -638,7 +638,8 @@ function applyUserRules(userId, contentTags, contentTitle) {
   }
 
   let boost = 0;
-  // Must-book logic for PRO/DECISION_MAKER
+  
+  // Rule B: Priority Boost - +150 for unbooked B2B/Talks for PRO and Decision Makers
   if (
     (role === "PRO" || role === "DECISION_MAKER") &&
     (contentTags.includes("B2B_NETWORKING") ||
@@ -653,7 +654,7 @@ function applyUserRules(userId, contentTags, contentTitle) {
     }
   }
 
-  // Sequence behavior: if user preferred VR_EXPERIENCE and content is CREATOR_TALK and has bookings
+  // Rule C: Chained Event Boost - +40 for VR preference leading to Creator Talk
   const history = bookingsMap[userId] || [];
   if (
     preferred.includes("VR_EXPERIENCE") &&
@@ -664,7 +665,7 @@ function applyUserRules(userId, contentTags, contentTitle) {
     applied.push("SEQUENCE_BOOST: VR then CreatorTalk pattern +40");
   }
 
-  // Tag matches between user preferred tags and content
+  // Rule D: Tag Alignment - +25 per matching tag with user preferences
   for (const t of contentTags) {
     if (preferred.includes(t)) {
       boost += 25;
